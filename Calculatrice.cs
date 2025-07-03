@@ -18,7 +18,7 @@ namespace AppCalculatrice
     */
     internal class Calculatrice
     {
-        string[] caracteresValides = { "+", "-", "/", "*", "^", ".", "," };
+        string[] caracteresValides = { "+", "-", "/", "*", "^", ".", ","};
         List<string> calculs = new();
         double dernierResultat = 0;
         string? input;
@@ -32,17 +32,29 @@ namespace AppCalculatrice
          */
         public void AfficherExpression()
         {
+            Console.BackgroundColor = ConsoleColor.DarkGray;
+            Console.Clear();
             while (true)
             {
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.Write("|   --------   Calculatrice   --------   |\n" +
+                    "|        (Tapez 'q' pour quitter)        |\n" +
                     $"|{new string(' ', 40)}|\n" +
                     $"|{new string(' ', 40)}|\n" +
                     $"|{new string(' ', 40)}|\n");
+
                 // Afficher la ligne de l'expression
                 AfficherLigneExpression(input, dernierResultat);
                 // L'utilisateur doit commencer par entrer un nombre, sinon une erreur sera affichée
+                Console.ForegroundColor = ConsoleColor.White;
                 input = Console.ReadLine();
                 input = input.Trim(); // Retire les espaces inutiles
+                Console.ForegroundColor = ConsoleColor.Green;
+
+                // Vérifier que l'utilisateur ne veuille pas quitter le programme
+                foreach (char c in input)
+                    if (c == 'q')
+                        Environment.Exit(0);
 
                 // > "15  + 9  / 8 * 55.5" = 80
                 // > "80 + 50 / 475"
@@ -63,7 +75,8 @@ namespace AppCalculatrice
                     Console.Clear();
                     if (ex is Exception)
                     {
-                        Console.WriteLine("Impossible de commencer cette opération avec le chiffre 0");
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(ex.Message);
                     }
                 }
 
@@ -132,26 +145,28 @@ namespace AppCalculatrice
             // 1. Enlever tout les whitespaces inutiles
             expression = expression.Replace(" ", "");
             // Et, si l'expression commence par un "+" ou un "-", on ajoute un "0" au début de la liste
-            //Console.WriteLine("expression:" + expression);
-            //Console.WriteLine("expression[0]:" + expression[0]);
-            //Console.WriteLine("expression[1]:" + expression[1]);
-            //Console.ReadKey();
             if ("+-".Contains(expression[0]))
                 expression = '0' + expression;
-            else if ("/*^".Contains(expression[1].ToString()))
-                throw new Exception($"Impossible de commencer une opération avec le signe {expression[0]}.");
-            // TODO:  * et / a faire
-            // Si un "*" ou un "/" sont devant, alors division par zéro
+            else if (expression[0] == '0' && "/*^".Contains(expression[1].ToString()))
+                // Si un "*" ou un "/" ou "^" sont devant, alors division par zéro provoque une erreur
+                throw new InvalidOperationException($"Impossible de commencer une opération avec le signe {expression[1]}.");
+            // Vérifier qu'il n'y a pas de division par zéro
+            for(int i = 0; i < expression.Length; i++)
+            {
+                //i < expression.Length - 1 nécessaire pour ne pas vérifier un "index out of range"
+                if (i < expression.Length - 1 && expression[i] == '/' && expression[i + 1] == '0')
+                    throw new InvalidOperationException("Division par zéro impossible!");
+            }
+
             // 2. Vérifier qu'il n'y a pas de caractères bizarres
             foreach (char c in expression)
                 {
                     // Il faudra probablement faire un throw pour renvoyer une erreur
                     if (!caracteresValides.Contains(c.ToString()) && !char.IsDigit(c))
                     {
-                        Console.WriteLine("ERREUR DANS L'ECRITURE DE L'OPERATION");
-                        return new List<string>();
-                    }
+                        throw new ArgumentException($"ERREUR : Le caractère [{c}] ne peut pas être écrit dans l'opération.");
                 }
+            }
 
             List<string> calculsListe = new List<string>();
             var matches = Regex.Matches(expression, @"\d+|\+|\-|\*|\/|\^|\.|\,"); // Utilisation d'un regex pour "splitter" les opérateurs
@@ -202,9 +217,12 @@ namespace AppCalculatrice
 
         void AfficherLigneExpression(string input, double dernierResultat)
         {
+            Console.ForegroundColor = ConsoleColor.White;
             Console.Write(
-                $"|\t{(input == null ? new string(' ', 33) : input[0] == '0' ? input.Substring(1) + new string(' ', 34 - input.Length) : input + new string(' ', 33 - input.Length))}|\n" +
-                $"|\t{(dernierResultat == 0 ? "= " : "= " + dernierResultat)}");
+                $"|\t{(input == null ? new string(' ', 33) : input[0] == '0' ? input.Substring(1) + new string(' ', 34 - input.Length) : input + new string(' ', 33 - input.Length))}|\n");
+            Console.Write($"|\t");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write($"{(dernierResultat == 0 ? "= " : "= " + dernierResultat)}");
 
         }
         void AfficherListe(List<string> liste)
