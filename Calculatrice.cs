@@ -23,7 +23,6 @@ namespace AppCalculatrice
         double dernierResultat = 0;
         string? input;
 
-
         /** 
          *  ----------------------
          *  ---- CALCULATRICE ----
@@ -35,7 +34,7 @@ namespace AppCalculatrice
         {
             while (true)
             {
-                Console.Write("|------------- Calculatrice -------------|\n" +
+                Console.Write("|   --------   Calculatrice   --------   |\n" +
                     $"|{new string(' ', 40)}|\n" +
                     $"|{new string(' ', 40)}|\n" +
                     $"|{new string(' ', 40)}|\n");
@@ -49,36 +48,42 @@ namespace AppCalculatrice
                 // > "80 + 50 / 475"
                 // S'il y'a eu un résultat précédemment, l'ajouter au tout début de la string de l'user
                 input = dernierResultat.ToString() + input;
+                try
+                {
+                    calculs = ConvertirCalculs(input);
+                    input = $"{string.Join(" ", calculs)}"; // Pour l'affichage après le console.Clear
 
-                //Console.WriteLine("dernierResultat:", input);
+                    double resultat = Calculer(calculs);
+                    calculs.Clear();
+                    dernierResultat = Math.Round(resultat, 7); // 7 chiffres après la virgule max
+                    Console.Clear();
+                }
+                catch (Exception ex)
+                {
+                    Console.Clear();
+                    if (ex is Exception)
+                    {
+                        Console.WriteLine("Impossible de commencer cette opération avec le chiffre 0");
+                    }
+                }
 
-                calculs = ConvertirCalculs(input);
-
-                input = $"{string.Join(" ", calculs)}"; // Pour l'affichage après le console.Clear
-
-                double resultat = Calculer(calculs);
-                calculs.Clear();
-                dernierResultat = Math.Round(resultat, 7);
-
-                Console.Clear();
             }
         }
 
         /**
-         * Retourne le résultat d'une liste de calculs sous le format suivant :
-         * [num,op,num,op,num...,num]
+         * Retourne le résultat d'une liste de calculs sous le format suivant avec comme type double
          */
         double Calculer(List<string> calculs)
         {
             // Puissances prioritaires
             AppliquerOperation(calculs, "^", (a, b) => Math.Pow(a, b));
-            // Vérifie s'il y a des '*' et les calcules
+            // Vérifie s'il y a des '*' et les calcule
             AppliquerOperation(calculs, "*", (a, b) => a * b);
-            // Vérifie s'il y'a des '/' et les calcules
+            // Vérifie s'il y'a des '/' et les calcule
             AppliquerOperation(calculs, "/", (a, b) => a / b);
-            // Vérifie s'il y'a des '-' et les calcules
+            // Vérifie s'il y'a des '-' et les calcule
             AppliquerOperation(calculs, "-", (a, b) => a - b);
-            // Vérifie s'il y'a des '+' et les calcules
+            // Vérifie s'il y'a des '+' et les calcule
             AppliquerOperation(calculs, "+", (a, b) => a + b);
 
             return Convert.ToDouble(calculs[0]);
@@ -99,14 +104,14 @@ namespace AppCalculatrice
                 if (calculs[i] == operateur)
                 {
                     // On calcule les deux nombres a gauche et a droite
-                    // On les stocke dans une variable temp
+                    // On les stocke dans une variable resultat
                     double gauche = Convert.ToDouble(calculs[i - 1]);
                     double droite = Convert.ToDouble(calculs[i + 1]);
                     double resultat = operation(gauche, droite);
                     int iTemp = i - 1;
                     // On supprime les trois éléments de la liste
                     calculs.RemoveRange(iTemp, 3);
-                    // Et on insère temp à l'index de '*' - 1 (iTemp)
+                    // Et on insère resultat à l'index de '*' - 1 (iTemp)
                     calculs.Insert(iTemp, Convert.ToString(resultat));
                     i--;
                 }
@@ -127,19 +132,26 @@ namespace AppCalculatrice
             // 1. Enlever tout les whitespaces inutiles
             expression = expression.Replace(" ", "");
             // Et, si l'expression commence par un "+" ou un "-", on ajoute un "0" au début de la liste
-            if (expression[0] == '+' || expression[0] == '-')
+            //Console.WriteLine("expression:" + expression);
+            //Console.WriteLine("expression[0]:" + expression[0]);
+            //Console.WriteLine("expression[1]:" + expression[1]);
+            //Console.ReadKey();
+            if ("+-".Contains(expression[0]))
                 expression = '0' + expression;
+            else if ("/*^".Contains(expression[1].ToString()))
+                throw new Exception($"Impossible de commencer une opération avec le signe {expression[0]}.");
             // TODO:  * et / a faire
+            // Si un "*" ou un "/" sont devant, alors division par zéro
             // 2. Vérifier qu'il n'y a pas de caractères bizarres
             foreach (char c in expression)
-            {
-                // Il faudra probablement faire un throw pour renvoyer une erreur
-                if (!caracteresValides.Contains(c.ToString()) && !char.IsDigit(c))
                 {
-                    Console.WriteLine("ERREUR DANS L'ECRITURE DE L'OPERATION");
-                    return new List<string>();
+                    // Il faudra probablement faire un throw pour renvoyer une erreur
+                    if (!caracteresValides.Contains(c.ToString()) && !char.IsDigit(c))
+                    {
+                        Console.WriteLine("ERREUR DANS L'ECRITURE DE L'OPERATION");
+                        return new List<string>();
+                    }
                 }
-            }
 
             List<string> calculsListe = new List<string>();
             var matches = Regex.Matches(expression, @"\d+|\+|\-|\*|\/|\^|\.|\,"); // Utilisation d'un regex pour "splitter" les opérateurs
@@ -192,7 +204,7 @@ namespace AppCalculatrice
         {
             Console.Write(
                 $"|\t{(input == null ? new string(' ', 33) : input[0] == '0' ? input.Substring(1) + new string(' ', 34 - input.Length) : input + new string(' ', 33 - input.Length))}|\n" +
-                $"|\t{(dernierResultat == 0 ? "" : "= " + dernierResultat)}");
+                $"|\t{(dernierResultat == 0 ? "= " : "= " + dernierResultat)}");
 
         }
         void AfficherListe(List<string> liste)
