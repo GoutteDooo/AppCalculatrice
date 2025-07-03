@@ -213,12 +213,21 @@ namespace AppCalculatrice
 
         void AfficherLigneExpression(string input, double dernierResultat)
         {
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write(
-                $"|\t{(input == null ? new string(' ', 33) : input[0] == '0' ? input.Substring(1) + new string(' ', 34 - input.Length) : input + new string(' ', 33 - input.Length))}|\n");
-            Console.Write($"|\t");
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write($"{(dernierResultat == 0 ? "= " : "= " + dernierResultat)}");
+            try
+            {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write(
+                    $"|\t{(input == null ? new string(' ', 33) : input[0] == '0' ? input.Substring(1) + new string(' ', 34 - input.Length) : input + new string(' ', 33 - input.Length))}|\n");
+                Console.Write($"|\t");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write($"{(dernierResultat == 0 ? "= " : "= " + dernierResultat)}");
+            }
+            catch
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write("Erreur lors de l'affichage :(\n");
+                Console.ForegroundColor= ConsoleColor.Green;
+            }
 
         }
         void AfficherListe(List<string> liste)
