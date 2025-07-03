@@ -175,38 +175,34 @@ namespace AppCalculatrice
                 calculsListe.Add(match.ToString());
             }
             // Ici, on obtient une liste contenant l'expression entrée avec les opérateurs, mais les floatings ne sont pas encore bons
-            // Exemple de liste : ["12",".","25","+","40"]
+            // Exemple de liste obtenu à partir de "12.25 +   40  " => ["12",".","25","+","40"]
             // On a besoin de concaténer les floatings
+
             /**
-             * La fonction ci-dessous permet de récupérer tout les "." Dans la liste, et de concaténer son gauche et son droit ensemble
-             * Par exemple : ["12",".","25","+","40"] => ["12.25","+","40"]
+             * Les deux fonctions ci-dessous permettent de récupérer tout les "." ou "," dans la liste, et de concaténer son gauche et son droit ensemble
+             * Par exemple : ["12",".","25","+","40"] donne ["12.25","+","40"]
              */
             AppliquerOperation(calculsListe, ".", (a, b) => a + b / Math.Pow(10, b.ToString().Length));
             AppliquerOperation(calculsListe, ",", (a, b) => a + b / Math.Pow(10, b.ToString().Length));
-            // 3. Maintenant qu'on a une liste, on va d'abord vérifier qu'elle est conforme
+            // 3. Maintenant qu'on a une liste à peu près correcte, on va d'abord vérifier qu'elle est belle et bien conforme
             bool numState = true; // permet de connaître s'il doit y avoir un nombre ou non à l'index i
+            // A chaque fin de boucle, numState va alterner entre true et false, afin de checker s'il doit y avoir
+            // un opérateur à cet endroit (false) ou un nombre (true)
+            // Car pour rappel, on vérifie si la liste est dans ce format : [nombre, opérateur, nombre, opérateur, ... , nombre]
             for (int i = 0; i < calculsListe.Count; i++)
             {
-                string op = calculsListe[i];
-                // si entrée doit être un nombre
+                string element = calculsListe[i];
+                // si l'élément doit être un nombre
                 if (numState)
                 {
                     // Si ce n'est pas un nombre (float ou int)
-                    if (!double.TryParse(op, out double nombre))
-                    {
-                        Console.Clear();
-                        Console.WriteLine("ERREUR LORS DE L'ANALYSE DE LA LIGNE");
-                        break;
-                    }
+                    if (!double.TryParse(element, out double nombre))
+                        throw new ArgumentException("L'expression est incorrecte. Veuillez réessayer SVP.");
                 }
                 else // Si entrée doit être un opérateur
                 {
-                    if (op.Length != 1 || !caracteresValides.Contains(op))
-                    {
-                        Console.Clear();
-                        Console.WriteLine("ERREUR DE L'ANALYSE DE LA LIGNE");
-                        break;
-                    }
+                    if (!caracteresValides.Contains(element))
+                        throw new ArgumentException("L'expression est incorrecte. Veuillez réessayer SVP.");
                 }
                 numState = !numState; // A la prochaine itération, on vérifie l'inverse de numState
             }
